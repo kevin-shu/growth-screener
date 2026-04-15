@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growth Screener</title>
+  <script src="marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f6fa;
+      color: #222;
+    }
+
+    /* ── Layout: sidebar + main ────────────────────── */
+    #layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ────────────────────────────────────── */
+    #sidebar {
+      width: 190px;
+      min-width: 190px;
+      background: #1a1a2e;
+      color: #c8cadf;
+      overflow-y: auto;
+      padding: 1.2rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    #sidebar-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #8b9cf8;
+      padding: 0 0.4rem 0.9rem;
+      border-bottom: 1px solid #2a2a4e;
+      margin-bottom: 0.5rem;
+    }
+
+    details { margin-bottom: 0.15rem; }
+
+    details > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #8090b0;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      user-select: none;
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before {
+      content: "▶";
+      font-size: 0.6rem;
+      transition: transform 0.15s;
+      display: inline-block;
+    }
+    details[open] > summary::before { transform: rotate(90deg); }
+    details > summary:hover { background: #252550; color: #c0ccf8; }
+
+    #sidebar ul { list-style: none; margin: 0.15rem 0 0.3rem 0.9rem; }
+    #sidebar li { margin: 0.1rem 0; }
+
+    #sidebar a {
+      display: block;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      color: #9098b8;
+      text-decoration: none;
+      transition: background 0.1s, color 0.1s;
+    }
+    #sidebar a:hover { background: #252550; color: #dde0ff; }
+    #sidebar a.active { background: #4a5cf0; color: #fff; font-weight: 600; }
+
+    /* ── Main content ────────────────────────────────── */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 2.5rem;
+    }
+
+    #content { max-width: 100%; }
+
+    .placeholder {
+      color: #aaa;
+      margin-top: 30vh;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    /* ── Markdown rendering ──────────────────────────── */
+    #content h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 0.3rem;
+      color: #1a1a2e;
+    }
+
+    #content blockquote {
+      border-left: 3px solid #4a5cf0;
+      padding: 0.25rem 1rem;
+      color: #666;
+      margin: 0.3rem 0 1.2rem;
+      font-size: 0.85rem;
+    }
+
+    #content h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 1.8rem 0 0.6rem;
+      color: #2a2a4e;
+      border-bottom: 2px solid #e8e9f5;
+      padding-bottom: 0.4rem;
+    }
+
+    #content h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 1.2rem 0 0.4rem;
+      color: #333;
+    }
+
+    /* ── Sortable table ──────────────────────────────── */
+    #content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 0.5rem 0 1rem;
+      font-size: 0.78rem;
+      display: block;
+      overflow-x: auto;
+    }
+
+    #content th {
+      background: #2a2a4e;
+      color: #dde0ff;
+      padding: 0.45rem 0.7rem;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    #content th:hover { background: #3a3a6e; }
+    #content th::after {
+      content: " ⇅";
+      font-size: 0.65rem;
+      opacity: 0.4;
+    }
+    #content th.asc::after  { content: " ▲"; opacity: 1; }
+    #content th.desc::after { content: " ▼"; opacity: 1; }
+
+    #content td {
+      padding: 0.38rem 0.7rem;
+      border-bottom: 1px solid #eef0f8;
+      white-space: nowrap;
+    }
+
+    #content tr:nth-child(even) td { background: #f8f9ff; }
+    #content tr:hover td { background: #eef0ff; }
+
+    /* ── Lists / text ────────────────────────────────── */
+    #content ul { margin: 0.3rem 0 0.6rem 1.4rem; }
+    #content li { margin: 0.25rem 0; line-height: 1.55; font-size: 0.88rem; }
+    #content p  { margin: 0.4rem 0; line-height: 1.65; font-size: 0.9rem; }
+    #content strong { color: #1a1a2e; }
+    #content em  { color: #666; }
+    #content hr  { border: none; border-top: 1px solid #e0e2f0; margin: 1.5rem 0; }
+    #content a   { color: #4a5cf0; text-decoration: none; }
+    #content a:hover { text-decoration: underline; }
+    #content code {
+      background: #f0f0f8;
+      border-radius: 3px;
+      padding: 0.1em 0.4em;
+      font-size: 0.85em;
+    }
+
+    /* ── Footer ──────────────────────────────────────── */
+    #footer {
+      background: #1a1a2e;
+      color: #8090b0;
+      font-size: 0.72rem;
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 2rem;
+      border-top: 1px solid #2a2a4e;
+      line-height: 1.6;
+    }
+
+    #footer b { color: #a0aacc; }
+
+    .footer-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem 1.2rem;
+    }
+
+    .footer-group span { white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<div id="layout">
+  <aside id="sidebar">
+    <div id="sidebar-title">📈 Growth Screener</div>
+    <div id="report-list">載入中…</div>
+  </aside>
+
+  <main id="main">
+    <div id="content" class="placeholder">← 請從左側選擇報告日期</div>
+  </main>
+</div>
+
+<!-- 共用 Footer：指標說明 -->
+<footer id="footer">
+  <div class="footer-group">
+    <span><b>★</b> 接近 52 週高點（≥85%）</span>
+    <span><b>🔍</b> 基本面疑慮，建議深入研究</span>
+    <span><b>基期</b> 距 6 個月高點的跌幅（越深越好）</span>
+    <span><b>連漲/5</b> 過去 5 日中正報酬天數</span>
+    <span><b>評分</b> 綜合評分（5日%位×0.35 + 基期×0.25 + 連漲×0.20 + 均線×0.20）</span>
+  </div>
+  <div class="footer-group">
+    <span><b>MA20上升</b> 20日均線斜率向上</span>
+    <span><b>站上MA50</b> 收盤 &gt; 50日均線</span>
+    <span><b>黃金排列</b> MA20 &gt; MA50（短均上穿長均）</span>
+    <span><b>RSI</b> 相對強弱指數（14日），&gt;70 過熱，&lt;30 超賣</span>
+    <span><b>預估本益比</b> 以下一年預估 EPS 計算的本益比</span>
+    <span><b>↑↓</b> 預估 EPS 相較去年同期的方向</span>
+  </div>
+</footer>
+
+<script>
+  async function init() {
+    // 若用 file:// 開啟會因 CORS 無法 fetch，提示改用 http://
+    if (location.protocol === 'file:') {
+      document.getElementById('report-list').innerHTML =
+        '<p style="color:#f87171;font-size:0.75rem;padding:0.5rem">請用 HTTP 伺服器開啟：<br><code>bash report.sh</code></p>';
+      document.getElementById('content').innerHTML =
+        '<p style="color:#f87171;padding:2rem">⚠️ 請執行 <code>bash report.sh</code> 後再以 <b>http://localhost:8765</b> 開啟，直接開啟 HTML 檔案無法讀取報告。</p>';
+      return;
+    }
+    try {
+      const res = await fetch('daily-reports/index.json');
+      const dates = await res.json();
+      renderSidebar(dates);
+      if (dates.length > 0) await loadReport(dates[0]);
+    } catch (e) {
+      document.getElementById('report-list').innerHTML =
+        `<p style="color:#f87171;font-size:0.75rem;padding:0.5rem">載入失敗：${e.message}</p>`;
+    }
+  }
+
+  function renderSidebar(dates) {
+    const groups = {};
+    for (const d of dates) {
+      const month = d.slice(0, 7);
+      if (!groups[month]) groups[month] = [];
+      groups[month].push(d);
+    }
+
+    const months = Object.keys(groups).sort().reverse();
+    const html = months.map((month, i) => {
+      const links = groups[month].map(d =>
+        `<li><a href="#" data-date="${d}" id="link-${d}">${d.slice(5)}</a></li>`
+      ).join('');
+      return `<details ${i === 0 ? 'open' : ''}><summary>${month}</summary><ul>${links}</ul></details>`;
+    }).join('');
+
+    document.getElementById('report-list').innerHTML = html;
+    document.querySelectorAll('[data-date]').forEach(el => {
+      el.addEventListener('click', e => { e.preventDefault(); loadReport(el.dataset.date); });
+    });
+  }
+
+  async function loadReport(date) {
+    document.querySelectorAll('[data-date]').forEach(el => el.classList.remove('active'));
+    const link = document.getElementById(`link-${date}`);
+    if (link) link.classList.add('active');
+
+    const res = await fetch(`daily-reports/${date}.md`);
+    const text = await res.text();
+
+    const el = document.getElementById('content');
+    el.classList.remove('placeholder');
+    el.innerHTML = marked.parse(text);
+    document.getElementById('main').scrollTop = 0;
+
+    makeSortable();
+  }
+
+  // ── Sortable tables ──────────────────────────────────
+  function makeSortable() {
+    document.querySelectorAll('#content table').forEach(table => {
+      const headers = table.querySelectorAll('th');
+      headers.forEach((th, colIdx) => {
+        th.addEventListener('click', () => {
+          const isAsc = th.classList.contains('asc');
+          // 清除所有排序狀態
+          headers.forEach(h => h.classList.remove('asc', 'desc'));
+          th.classList.add(isAsc ? 'desc' : 'asc');
+          sortTable(table, colIdx, !isAsc);
+        });
+      });
+    });
+  }
+
+  function sortTable(table, colIdx, asc) {
+    const tbody = table.querySelector('tbody') || table;
+    // 取得所有非 header 的 tr
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.querySelector('td'));
+
+    rows.sort((a, b) => {
+      const av = cellVal(a, colIdx);
+      const bv = cellVal(b, colIdx);
+      // 嘗試數字比較
+      const an = parseFloat(av.replace(/[^0-9.\-+]/g, ''));
+      const bn = parseFloat(bv.replace(/[^0-9.\-+]/g, ''));
+      if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+      return asc ? av.localeCompare(bv, 'zh') : bv.localeCompare(av, 'zh');
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
+  function cellVal(row, idx) {
+    const td = row.querySelectorAll('td')[idx];
+    return td ? td.innerText.trim() : '';
+  }
+
+  init();
+</script>
+</body>
+</html>

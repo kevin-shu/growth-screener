@@ -1,0 +1,6 @@
+yfinance>=0.2.54
+pandas>=2.0
+rich>=13.0
+requests>=2.31
+lxml>=5.0
+html5lib>=1.1
