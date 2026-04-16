@@ -302,6 +302,9 @@
     el.innerHTML = marked.parse(text);
     document.getElementById('main').scrollTop = 0;
 
+    // 所有外部連結另開分頁
+    el.querySelectorAll('a[href^="http"]').forEach(a => a.target = '_blank');
+
     makeSortable();
   }
 
