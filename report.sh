@@ -11,10 +11,5 @@ echo "伺服器啟動中 (port $PORT)..."
 sleep 0.5
 
 URL="http://localhost:$PORT"
-# 優先用 Google Chrome 開啟（避免 Safari 快取問題）；沒有 Chrome 則用系統預設
-if open -a "Google Chrome" "$URL" 2>/dev/null; then
-  echo "已在 Chrome 開啟 $URL"
-else
-  open "$URL"
-  echo "已開啟 $URL"
-fi
+open "$URL"
+echo "已開啟 $URL"
