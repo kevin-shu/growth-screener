@@ -6,7 +6,7 @@ PORT=8765
 # 若 port 已被佔用則先結束舊程序
 lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null
 
-python3 -m http.server $PORT &>/tmp/screener-server.log &
+python3 -m http.server $PORT --directory . &>/tmp/screener-server.log &
 echo "伺服器啟動中 (port $PORT)..."
 sleep 0.5
 

@@ -17,7 +17,7 @@ console = Console()
 
 TOP_N          = 20   # 技術篩選後取前 N 支
 NEWS_TOP_N     = 5    # 一般新聞顯示前 N 支
-REPORTS_DIR    = Path(__file__).parent / "daily-reports"
+REPORTS_DIR    = Path(__file__).parent.parent / "daily-reports"
 
 
 def _translate_news(items: list[dict]) -> list[dict]:
@@ -180,7 +180,8 @@ def _write_daily_report(today: date, final: pd.DataFrame, info: dict,
                     url    = item.get("url", "")
                     if title:
                         src_link = f"[{source}]({url})" if url else source
-                        lines.append(f"  - {title} *— {src_link}*")
+                        date_prefix = f"({item.get('date')}) " if item.get("date") else ""
+                        lines.append(f"  - {date_prefix}{title} *— {src_link}*")
             else:
                 lines.append("- **相關新聞**：目前未找到明顯催化劑，可自行搜尋公司近期法說或產品動態")
             lines.append("")
@@ -222,7 +223,8 @@ def _write_daily_report(today: date, final: pd.DataFrame, info: dict,
                 url    = item.get("url", "")
                 if title:
                     src_link = f"[{source}]({url})" if url else source
-                    lines.append(f"- {title} *— {src_link}*")
+                    date_prefix = f"({item.get('date')}) " if item.get("date") else ""
+                    lines.append(f"- {date_prefix}{title} *— {src_link}*")
         else:
             lines.append("- 目前無最新新聞")
         lines.append("")
