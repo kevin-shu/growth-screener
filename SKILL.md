@@ -62,7 +62,7 @@ After all sub-agents complete, use the Edit tool to replace everything from
 ```markdown
 ### 個股分析報告
 
-#### 1. TICKER　公司名稱　[badges]
+#### 1. [TICKER](https://www.tradingview.com/symbols/TICKER/)　公司名稱　[badges]
 
 {sub-agent commentary for this stock}
 
@@ -72,7 +72,7 @@ After all sub-agents complete, use the Edit tool to replace everything from
 
 ---
 
-#### 2. TICKER　公司名稱　[badges]
+#### 2. [TICKER](https://www.tradingview.com/symbols/TICKER/)　公司名稱　[badges]
 ...
 ```
 
