@@ -22,6 +22,15 @@ console = Console()
 TOP_N          = 20   # 技術篩選後取前 N 支
 NEWS_TOP_N     = 5    # 一般新聞顯示前 N 支
 REPORTS_DIR    = Path(__file__).parent.parent / "daily-reports"
+BLACKLIST_PATH = Path(__file__).parent.parent / "screener" / "blacklist.json"
+
+
+def _load_blacklist() -> dict:
+    """載入用戶手動排除的股票清單。"""
+    import json
+    if BLACKLIST_PATH.exists():
+        return json.loads(BLACKLIST_PATH.read_text(encoding="utf-8"))
+    return {}
 
 
 def _translate_news(items: list[dict]) -> list[dict]:
@@ -260,6 +269,15 @@ def main():
     if candidates.empty:
         console.print("[yellow]今日無符合條件的股票。[/yellow]")
         return
+
+    # 過濾用戶手動排除的股票
+    blacklist = _load_blacklist()
+    if blacklist:
+        before = len(candidates)
+        candidates = candidates[~candidates["ticker"].isin(blacklist)]
+        excluded = before - len(candidates)
+        if excluded:
+            console.print(f"[dim]已依黑名單排除 {excluded} 支：{', '.join(blacklist)}[/dim]")
 
     top = candidates.head(TOP_N)
 
