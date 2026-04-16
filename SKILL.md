@@ -79,3 +79,12 @@ After all sub-agents complete, use the Edit tool to replace everything from
 Include every stock from the 篩選結果 table, in the same order.
 For stocks without news, omit the **新聞** block.
 Preserve the 已移除 section if it exists (do not overwrite it).
+
+### Step 5 — Launch the report viewer
+
+```bash
+bash report.sh
+```
+
+This starts the HTTP server and opens today's report in the browser.
+The sidebar will automatically show the latest date from `daily-reports/index.json`.
