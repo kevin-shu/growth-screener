@@ -2,51 +2,80 @@
 name: growth-screener
 description: >
   Runs the daily Growth Screener to identify strong large-cap momentum candidates
-  from S&P 500 + NASDAQ-100, then provides AI commentary for each result.
+  from S&P 500 + NASDAQ-100, then produces a per-stock AI analysis report.
   Invoke when the user asks to run the daily screen, generate today's report,
   or analyze screener output.
 compatibility: Requires Python 3.9+, packages in requirements.txt, project root as working directory
 metadata:
   author: Kevin Shu
   version: "1.0"
-allowed-tools: Bash Read
+allowed-tools: Bash Read Edit Agent
 ---
 
 ## Instructions
 
 When this skill is invoked, execute the following steps in order.
 
-### 1. Run the screener
+### Step 1 — Run the screener
 
 ```bash
 python3 scripts/main.py
 ```
 
-Wait for it to complete. The script will print a progress table in the terminal
-and save the report to `daily-reports/YYYY-MM-DD.md`.
+Wait for it to complete. The script saves today's report to
+`daily-reports/YYYY-MM-DD.md` (use today's date).
 
-### 2. Read the report
+### Step 2 — Read the report
 
-Read the generated `daily-reports/YYYY-MM-DD.md` (use today's date).
+Read the full `daily-reports/YYYY-MM-DD.md`. It contains:
+- **篩選結果** table — all passing stocks with technical + fundamental metrics
+- **需深入研究** — stocks with fundamental concerns (🔍)
+- **新聞催化劑** — recent news headlines per stock
 
-### 3. Provide AI commentary for each stock
+### Step 3 — Spawn one sub-agent per stock (all in parallel)
 
-For every stock listed in the **篩選結果** table, output a commentary block in
-Traditional Chinese using this format:
+For every stock in the 篩選結果 table, spawn a sub-agent using the Agent tool.
+Launch **all sub-agents in a single message** so they run in parallel.
 
+Each sub-agent receives a self-contained prompt with:
+- The stock's row data from the 篩選結果 table (all numeric metrics)
+- Its 🔍 concern details from 需深入研究 (if flagged)
+- Its news items from 新聞催化劑
+
+Each sub-agent must return a **繁體中文** analysis of 3–5 sentences covering:
+1. **技術面解讀** — why this signal stands out (cite score, RSI, MA structure, streak)
+2. **基本面評估** — whether fundamentals support the move (revenue trend, FCF, analyst rating, PE)
+3. **催化劑 / 風險** — what the news headlines reveal; for 🔍 stocks, explicitly judge whether the headlines constitute a credible turnaround thesis
+
+Rules for sub-agents:
+- Reference actual numbers from the data (e.g., 評分 0.847、RSI 68、營收 +22%)
+- For ★ stocks: address whether the 52-week high proximity is a breakout or an overextension risk
+- For 🔍 stocks: state clearly whether news supports or undermines a reversal thesis
+- No bullet points — write flowing prose
+
+### Step 4 — Rewrite the report
+
+After all sub-agents complete, use the Edit tool to replace everything from
+`### 需深入研究` (or `### 🔍`) through the end of the `### 新聞催化劑` section
+(up to and including the final `---`) with a new unified section:
+
+```markdown
+### 個股分析報告
+
+#### 1. TICKER　公司名稱　[badges]
+
+{sub-agent commentary for this stock}
+
+**新聞**
+- (MM/DD) 標題 — [來源](url)
+- ...
+
+---
+
+#### 2. TICKER　公司名稱　[badges]
+...
 ```
-### AI 評論：{TICKER}　{公司名稱}
-{2–4 sentences}
-```
 
-Each commentary must address:
-
-1. **技術面** — 說明這支股票評分高的原因（哪些指標突出：5日漲幅百分位、均線結構、連漲天數等）
-2. **基本面** — 判斷基本面是否支撐這波漲勢（營收成長、FCF、分析師評等、本益比是否合理）
-3. **催化劑或風險** — 根據報告中的新聞標題，指出最值得關注的催化劑或主要風險
-
-**額外規則：**
-- 數字要具體，直接引用報告中的數值（例如：評分 0.847、RSI 68、營收 +22%）
-- 標有 🔍 的股票，必須明確判斷新聞是否構成可信的反轉題材
-- 標有 ★ 的股票，說明接近 52 週高點對這筆交易的意義（突破還是追高風險）
-- 不要重複表格中已有的資料，重點放在「這些數字代表什麼」的解讀
+Include every stock from the 篩選結果 table, in the same order.
+For stocks without news, omit the **新聞** block.
+Preserve the 已移除 section if it exists (do not overwrite it).
