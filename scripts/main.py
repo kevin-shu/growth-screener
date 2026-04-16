@@ -1,6 +1,10 @@
+import sys
+from pathlib import Path
+# 將專案根目錄加入 sys.path，使 screener/ 模組可被找到
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import pandas as pd
 from datetime import date
-from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table

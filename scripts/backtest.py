@@ -7,6 +7,11 @@
 3. 記錄每個信號的 3 個月後報酬，並與 SPY 比較
 """
 
+import sys
+from pathlib import Path
+# 將專案根目錄加入 sys.path，使 screener/ 模組可被找到
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import pandas as pd
 import numpy as np
 import yfinance as yf
