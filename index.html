@@ -87,10 +87,17 @@
     #sidebar a:hover { background: #252550; color: #dde0ff; }
     #sidebar a.active { background: #4a5cf0; color: #fff; font-weight: 600; }
 
+    /* ── Right column (main + footer, scrolls together) ─ */
+    #right-col {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
     /* ── Main content ────────────────────────────────── */
     #main {
       flex: 1;
-      overflow-y: auto;
       padding: 2rem 2.5rem;
     }
 
@@ -315,6 +322,57 @@
       font-size: 0.85em;
     }
 
+    /* ── Mobile header ──────────────────────────────── */
+    #mobile-header {
+      display: none;
+      background: #1a1a2e;
+      padding: 0.7rem 1rem;
+      align-items: center;
+      gap: 0.8rem;
+      border-bottom: 1px solid #2a2a4e;
+      flex-shrink: 0;
+    }
+    #hamburger {
+      background: none;
+      border: none;
+      color: #8b9cf8;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+    #mobile-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #8b9cf8;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    #overlay.show { display: block; }
+
+    @media (max-width: 640px) {
+      html, body { width: 100%; overflow-x: hidden; }
+      #mobile-header { display: flex; }
+      #layout { width: 100%; }
+      #sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100%;
+        z-index: 20;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      #sidebar.open { transform: translateX(0); }
+      #right-col { width: 100%; }
+      #main { padding: 1.2rem 1rem; }
+      #footer { font-size: 0.68rem; padding: 0.6rem 1rem; }
+    }
+
     /* ── Footer ──────────────────────────────────────── */
     #footer {
       background: #1a1a2e;
@@ -341,20 +399,24 @@
 </head>
 <body>
 
+<div id="mobile-header">
+  <button id="hamburger" onclick="toggleSidebar()">☰</button>
+  <span id="mobile-title">📈 Growth Screener</span>
+</div>
+<div id="overlay" onclick="toggleSidebar()"></div>
 <div id="layout">
   <aside id="sidebar">
     <div id="sidebar-title">📈 Growth Screener</div>
-    <button id="home-btn" onclick="showHomepage()">🏠 選股邏輯</button>
+    <button id="home-btn" onclick="showHomepage(); closeSidebarOnMobile()">🏠 選股邏輯</button>
     <div id="report-list">載入中…</div>
   </aside>
 
+  <div id="right-col">
   <main id="main">
     <div id="content" class="placeholder">← 請從左側選擇報告日期</div>
   </main>
-</div>
-
-<!-- 共用 Footer：指標說明 -->
-<footer id="footer">
+  <!-- 共用 Footer：指標說明 -->
+  <footer id="footer">
   <div class="footer-group">
     <span><b>★</b> 接近 52 週高點（≥85%）</span>
     <span><b>🔍</b> 基本面疑慮，建議深入研究</span>
@@ -370,7 +432,9 @@
     <span><b>預估本益比</b> 以下一年預估 EPS 計算的本益比</span>
     <span><b>↑↓</b> 預估 EPS 相較去年同期的方向</span>
   </div>
-</footer>
+  </footer>
+  </div>
+</div>
 
 <script>
   async function init() {
@@ -411,7 +475,7 @@
 
     document.getElementById('report-list').innerHTML = html;
     document.querySelectorAll('[data-date]').forEach(el => {
-      el.addEventListener('click', e => { e.preventDefault(); loadReport(el.dataset.date); });
+      el.addEventListener('click', e => { e.preventDefault(); loadReport(el.dataset.date); closeSidebarOnMobile(); });
     });
   }
 
@@ -427,7 +491,7 @@
     const el = document.getElementById('content');
     el.classList.remove('placeholder');
     el.innerHTML = marked.parse(text);
-    document.getElementById('main').scrollTop = 0;
+    document.getElementById('right-col').scrollTop = 0;
 
     // 所有外部連結另開分頁
     el.querySelectorAll('a[href^="http"]').forEach(a => a.target = '_blank');
@@ -595,7 +659,20 @@
         <p>股價歷史資料與基本面數據來自 <strong>yfinance</strong>（Yahoo Finance），每日執行時下載近 1 年的日線資料。新聞標題由 Yahoo Finance RSS 抓取並以 Google Translate 翻譯為繁體中文。</p>
       </div>
     `;
-    document.getElementById('main').scrollTop = 0;
+    document.getElementById('right-col').scrollTop = 0;
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('show');
+  }
+
+  // 手機選完報告後自動收合 sidebar
+  function closeSidebarOnMobile() {
+    if (window.innerWidth <= 640) {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    }
   }
 
   init();
