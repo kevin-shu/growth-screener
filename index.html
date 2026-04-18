@@ -103,6 +103,131 @@
       font-size: 1rem;
     }
 
+    /* ── Homepage ────────────────────────────────────── */
+    #home-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.45rem 0.8rem;
+      margin-bottom: 0.7rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #8b9cf8;
+      background: #252550;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+    #home-btn:hover { background: #303070; color: #c0ccf8; }
+    #home-btn.active { background: #4a5cf0; color: #fff; }
+
+    .home-section {
+      margin: 1.6rem 0;
+    }
+    .home-section h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2a2a4e;
+      border-bottom: 2px solid #e8e9f5;
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.8rem;
+    }
+    .home-section p {
+      font-size: 0.88rem;
+      color: #444;
+      line-height: 1.7;
+      margin: 0.4rem 0;
+    }
+
+    .step-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .step-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      font-size: 0.87rem;
+      line-height: 1.6;
+    }
+    .step-num {
+      min-width: 24px;
+      height: 24px;
+      background: #4a5cf0;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+    .step-text strong { color: #1a1a2e; }
+    .step-text .tag {
+      display: inline-block;
+      background: #eef0ff;
+      color: #4a5cf0;
+      border-radius: 4px;
+      padding: 0.05em 0.45em;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-left: 0.3rem;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin: 0.6rem 0;
+    }
+    .score-card {
+      background: #f8f9ff;
+      border: 1px solid #e0e2f0;
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+    }
+    .score-card .weight {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #4a5cf0;
+      line-height: 1;
+    }
+    .score-card .label {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 0.2rem;
+    }
+    .score-card .desc {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 0.15rem;
+    }
+
+    .badge-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      margin-top: 0.5rem;
+    }
+    .badge-table td {
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid #eef0f8;
+      vertical-align: top;
+    }
+    .badge-table tr:last-child td { border-bottom: none; }
+    .badge-table td:first-child {
+      white-space: nowrap;
+      font-weight: 700;
+      color: #2a2a4e;
+      width: 110px;
+    }
+
     /* ── Markdown rendering ──────────────────────────── */
     #content h2 {
       font-size: 1.5rem;
@@ -219,6 +344,7 @@
 <div id="layout">
   <aside id="sidebar">
     <div id="sidebar-title">📈 Growth Screener</div>
+    <button id="home-btn" onclick="showHomepage()">🏠 選股邏輯</button>
     <div id="report-list">載入中…</div>
   </aside>
 
@@ -232,9 +358,9 @@
   <div class="footer-group">
     <span><b>★</b> 接近 52 週高點（≥85%）</span>
     <span><b>🔍</b> 基本面疑慮，建議深入研究</span>
-    <span><b>基期</b> 距 6 個月高點的跌幅（越深越好）</span>
+    <span><b>基期</b> 今日收盤距 52 週高點的跌幅（0% = 新高）</span>
     <span><b>連漲/5</b> 過去 5 日中正報酬天數</span>
-    <span><b>評分</b> 綜合評分（5日%位×0.35 + 基期×0.25 + 連漲×0.20 + 均線×0.20）</span>
+    <span><b>評分</b> 綜合評分（5日%位×0.40 + 連漲×0.25 + 均線×0.25 + 基期×0.10）</span>
   </div>
   <div class="footer-group">
     <span><b>MA20上升</b> 20日均線斜率向上</span>
@@ -260,7 +386,7 @@
       const res = await fetch('daily-reports/index.json');
       const dates = await res.json();
       renderSidebar(dates);
-      if (dates.length > 0) await loadReport(dates[0]);
+      showHomepage();  // 預設顯示選股邏輯首頁
     } catch (e) {
       document.getElementById('report-list').innerHTML =
         `<p style="color:#f87171;font-size:0.75rem;padding:0.5rem">載入失敗：${e.message}</p>`;
@@ -290,6 +416,7 @@
   }
 
   async function loadReport(date) {
+    document.getElementById('home-btn').classList.remove('active');
     document.querySelectorAll('[data-date]').forEach(el => el.classList.remove('active'));
     const link = document.getElementById(`link-${date}`);
     if (link) link.classList.add('active');
@@ -345,6 +472,130 @@
   function cellVal(row, idx) {
     const td = row.querySelectorAll('td')[idx];
     return td ? td.innerText.trim() : '';
+  }
+
+  function showHomepage() {
+    document.querySelectorAll('[data-date]').forEach(el => el.classList.remove('active'));
+    document.getElementById('home-btn').classList.add('active');
+
+    const el = document.getElementById('content');
+    el.classList.remove('placeholder');
+    el.innerHTML = `
+      <h2 style="font-size:1.6rem;font-weight:800;color:#1a1a2e;margin-bottom:0.2rem">選股邏輯說明</h2>
+      <p style="color:#666;font-size:0.85rem;margin-bottom:0">Growth Screener 的完整篩選流程與評分機制</p>
+
+      <div class="home-section">
+        <h3>篩選宇宙</h3>
+        <p>合併 <strong>S&amp;P 500</strong> 與 <strong>NASDAQ-100</strong>，去重後約 517 支美國大型股。每日從這個宇宙中找出技術面最強的 20 支候選股。</p>
+      </div>
+
+      <div class="home-section">
+        <h3>第一關：硬性篩選條件（4個，全部必須通過）</h3>
+        <ul class="step-list">
+          <li>
+            <span class="step-num">1</span>
+            <span class="step-text">
+              <strong>5日強度 ≥ 85% 百分位</strong><span class="tag">動能</span><br>
+              今日的 5 日累計報酬，必須高於過去 252 個交易日中至少 85% 的歷史值。確保捕捉的是相對罕見的強勢動能，而非日常波動。5日報酬為負者直接排除。
+            </span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <span class="step-text">
+              <strong>連漲天數 ≥ 3／過去 5 日</strong><span class="tag">持續性</span><br>
+              過去 5 個交易日中，至少有 3 天收盤上漲。排除單日爆衝後立即回落的假突破，確認買盤具持續性。
+            </span>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <span class="step-text">
+              <strong>收盤 &gt; MA20（與條件 4 相同，基期不再為篩選條件）</strong><span class="tag">基期</span><br>
+              基期深度（今日收盤 vs 52 週高點）僅作為評分輔助項（10% 權重），不設硬性門檻。動能研究顯示創新高是延續信號而非障礙，因此不排除已在高位的強勢股。
+            </span>
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <span class="step-text">
+              <strong>收盤 &gt; MA20</strong><span class="tag">突破確認</span><br>
+              當日收盤必須高於 20 日移動平均線。確認股價已完成均線突破，而非仍在均線下方的弱勢整理。
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="home-section">
+        <h3>第二關：綜合評分（0–1 分）</h3>
+        <p>通過硬性條件的股票，依以下公式計算評分，取前 20 名：</p>
+        <div class="score-grid">
+          <div class="score-card">
+            <div class="weight">40%</div>
+            <div class="label">5 日強度百分位</div>
+            <div class="desc">動能越強、歷史上越罕見，分數越高</div>
+          </div>
+          <div class="score-card">
+            <div class="weight">25%</div>
+            <div class="label">連漲天數</div>
+            <div class="desc">5 日全漲得滿分，反映買盤持續入場</div>
+          </div>
+          <div class="score-card">
+            <div class="weight">25%</div>
+            <div class="label">均線品質</div>
+            <div class="desc">MA20 上升 + 站上 MA50 + 黃金排列，各佔 ⅓</div>
+          </div>
+          <div class="score-card">
+            <div class="weight">10%</div>
+            <div class="label">基期深度</div>
+            <div class="desc">今日收盤距 52 週高點的跌幅，越大修復空間越大</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-section">
+        <h3>第三關：基本面過濾</h3>
+        <ul class="step-list">
+          <li>
+            <span class="step-num" style="background:#ef4444">✕</span>
+            <span class="step-text">
+              <strong>直接移除</strong>：分析師共識評級為「強力賣出」（recommendation ≥ 4.5）的股票，不列入候選。
+            </span>
+          </li>
+          <li>
+            <span class="step-num" style="background:#f59e0b">🔍</span>
+            <span class="step-text">
+              <strong>標記待研究</strong>：營收年增率為負（衰退），或自由現金流大幅為負（燒錢）。這類股票保留在名單中，但加上 🔍 標記，提醒需對照新聞判斷是否有反轉題材。
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="home-section">
+        <h3>排除名單（Blacklist）</h3>
+        <p>用戶可在 <code>screener/blacklist.json</code> 中手動加入不想追蹤的股票（例如產業長期衰退的標的）。排除在進入前 20 之前生效。可透過每次報告末的 feedback 更新此名單。</p>
+      </div>
+
+      <div class="home-section">
+        <h3>報告欄位說明</h3>
+        <table class="badge-table">
+          <tr><td>★</td><td>目前股價 ≥ 52 週高點的 95%，表示股票正在接近或創歷史高位</td></tr>
+          <tr><td>🔍</td><td>基本面疑慮（營收衰退或大額負現金流），建議搭配新聞判斷反轉可信度</td></tr>
+          <tr><td>基期</td><td>今日收盤距 52 週高點的跌幅。0% 代表正在創新高；-20% 代表距高點還差 20%。僅作為評分輔助（10% 權重），不設硬性門檻</td></tr>
+          <tr><td>5日漲 / 10日漲</td><td>過去 5 / 10 個交易日的累計報酬</td></tr>
+          <tr><td>連漲/5</td><td>過去 5 日中有正報酬的天數（最高 5/5）</td></tr>
+          <tr><td>評分</td><td>綜合評分 0–1，由上述四個維度加權計算</td></tr>
+          <tr><td>MA20 上升</td><td>20 日均線斜率向上（現在的 MA20 &gt; 10 天前的 MA20）</td></tr>
+          <tr><td>黃金排列</td><td>MA20 高於 MA50，短期均線在長期均線之上</td></tr>
+          <tr><td>RSI</td><td>14 日相對強弱指數。&gt;70 視為過熱，&lt;30 視為超賣</td></tr>
+          <tr><td>預估本益比</td><td>以下一年預估 EPS 計算的本益比（Forward P/E）</td></tr>
+          <tr><td>↑↓</td><td>預估 EPS 相較去年同期的方向</td></tr>
+        </table>
+      </div>
+
+      <div class="home-section">
+        <h3>資料來源</h3>
+        <p>股價歷史資料與基本面數據來自 <strong>yfinance</strong>（Yahoo Finance），每日執行時下載近 1 年的日線資料。新聞標題由 Yahoo Finance RSS 抓取並以 Google Translate 翻譯為繁體中文。</p>
+      </div>
+    `;
+    document.getElementById('main').scrollTop = 0;
   }
 
   init();

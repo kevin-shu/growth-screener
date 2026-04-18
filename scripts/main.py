@@ -264,7 +264,12 @@ def main():
     close, volume = fetch_historical(tickers)
 
     console.print("[dim]Step 3/4[/dim] 計算技術指標...")
-    candidates = screen(close, volume)
+    candidates = screen(
+        close, volume,
+        require_base_filter=False,     # 新高不是障礙，移除硬性基期門檻
+        base_uses_current_price=True,  # 基期 = 今日收盤 vs 52 週高點
+        weights=(0.40, 0.10, 0.25, 0.25),
+    )
 
     if candidates.empty:
         console.print("[yellow]今日無符合條件的股票。[/yellow]")
