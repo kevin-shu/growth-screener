@@ -109,7 +109,17 @@ bash report.sh
 
 This starts the HTTP server and opens today's report in the browser.
 
-### Step 7 — Ask for feedback and update thoughts.md
+### Step 7 — Commit and push to GitHub
+
+After all edits are complete (report rewritten, thoughts.md updated), commit and push:
+
+```bash
+git add daily-reports/ screener/blacklist.json thoughts.md
+git commit -m "feat: daily report $(date +%Y-%m-%d)"
+git push
+```
+
+### Step 8 — Ask for feedback and update thoughts.md
 
 Ask the user:
 
