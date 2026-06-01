@@ -440,7 +440,8 @@ def main():
     console.print()
 
     # ── 寫入每日報告 ──────────────────────────────────────────────────────
-    _write_daily_report(date.today(), final, info, flags_map, removed, news_map)
+    # 使用資料實際日期（美股收盤日），而非執行當日日期
+    _write_daily_report(close.index[-1].date(), final, info, flags_map, removed, news_map)
 
 
 if __name__ == "__main__":
