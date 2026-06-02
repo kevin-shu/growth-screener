@@ -40,7 +40,8 @@ def screen(close: pd.DataFrame, volume: pd.DataFrame,
         prices = close[ticker].dropna()
         vols   = volume[ticker].dropna()
 
-        if len(prices) < 145 or len(vols) < 21:
+        # Accept shorter histories when GitHub fallback is in use (~100 days)
+        if len(prices) < 55 or len(vols) < 21:
             continue
 
         daily_returns = prices.pct_change().dropna()
