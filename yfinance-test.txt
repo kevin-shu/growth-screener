@@ -1,0 +1,8 @@
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+Failed to get ticker 'AAPL' reason: Expecting value: line 1 column 1 (char 0)
+HTTP Error 403: Host not in allowlist
+HTTP Error 403: Host not in allowlist
+
+1 Failed download:
+['AAPL']: TypeError("argument of type 'NoneType' is not iterable")
+RESULT: EMPTY
