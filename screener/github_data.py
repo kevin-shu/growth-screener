@@ -17,13 +17,46 @@ _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; growth-screener/1.0)"}
 
 
 def _get_commits(max_count: int = 150) -> list[tuple[str, str]]:
-    """Fetch recent commit (date, sha) pairs from GitHub API."""
-    r = requests.get(_API, params={"per_page": max_count}, headers=_HEADERS, timeout=30)
-    r.raise_for_status()
-    return [
-        (item["commit"]["committer"]["date"][:10], item["sha"])
-        for item in r.json()
-    ]
+    """Fetch recent commit (date, sha) pairs — tries GitHub API first, falls back to git clone."""
+    try:
+        r = requests.get(_API, params={"per_page": max_count}, headers=_HEADERS, timeout=15)
+        r.raise_for_status()
+        return [
+            (item["commit"]["committer"]["date"][:10], item["sha"])
+            for item in r.json()
+        ]
+    except Exception:
+        pass
+
+    # Fallback: shallow-clone via git protocol (works when API is blocked)
+    import subprocess, tempfile, os, shutil
+    repo_url = "https://github.com/Ate329/top-us-stock-tickers.git"
+    cache_dir = "/tmp/_ate329_bare_repo"
+    try:
+        if os.path.isdir(cache_dir):
+            subprocess.run(
+                ["git", "-C", cache_dir, "fetch", "--depth", str(max_count), "origin", "HEAD"],
+                check=True, capture_output=True, timeout=120,
+            )
+        else:
+            subprocess.run(
+                ["git", "clone", "--depth", str(max_count), "--bare", repo_url, cache_dir],
+                check=True, capture_output=True, timeout=120,
+            )
+        log = subprocess.run(
+            ["git", "-C", cache_dir, "log", f"--max-count={max_count}", "--format=%ci %H"],
+            check=True, capture_output=True, text=True, timeout=30,
+        )
+        commits = []
+        for line in log.stdout.strip().splitlines():
+            parts = line.split()
+            if len(parts) >= 2:
+                date_str = parts[0]   # YYYY-MM-DD
+                sha = parts[-1]
+                commits.append((date_str, sha))
+        return commits
+    except Exception:
+        return []
 
 
 def _fetch_one(date_str: str, sha: str) -> tuple[str, dict] | None:
