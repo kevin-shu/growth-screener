@@ -19,8 +19,12 @@ def fetch_historical(tickers: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
         if not raw.empty and "Close" in raw.columns:
             close = raw["Close"]
             volume = raw["Volume"]
-            # Confirm we got real data (not all-NaN)
-            if close.notna().any().any():
+            # Require most tickers to have real data — a handful of lucky
+            # successes amid a mostly-failed batch is worse than the
+            # GitHub fallback, since it screens a biased sliver of the
+            # universe instead of a genuine cross-section.
+            coverage = close.notna().any(axis=0).mean()
+            if coverage >= 0.5:
                 return close, volume
     except Exception:
         pass
